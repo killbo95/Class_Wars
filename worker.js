@@ -40,6 +40,8 @@ export class GameRoom {
     this.tiles = Array.from({length: COLS*ROWS}, () => ({team:-1}));
     this.powerups = [];
     this.sockets = new Map();
+    this.socketIds = new Map();
+    this.roundTimer = setInterval(() => { if (!this.roundEnded && Date.now()-this.roundStarted >= ROUND_MS) this.sendState(); }, 1000);
     this.roundStarted = Date.now();
     this.roundEnded = false;
     this.controlOwner = -1;
@@ -64,7 +66,7 @@ export class GameRoom {
     let data;
     try { data = JSON.parse(typeof message === "string" ? message : new TextDecoder().decode(message)); }
     catch { return; }
-    const attached = ws.__classWarsPlayerId;
+    const attached = this.socketIds.get(ws);
     if (data.type === "join") {
       if (attached && this.players.has(attached)) return;
       if (this.players.size >= MAX_PLAYERS) {
@@ -81,7 +83,7 @@ export class GameRoom {
         lastMove:Date.now(), lastBonk:0, lastAbility:0, lastControl:0,
         shieldUntil:0, dx:1, dy:0
       };
-      ws.__classWarsPlayerId = id;
+      this.socketIds.set(ws,id);
       this.players.set(id,p);
       this.sockets.set(id,ws);
       this.sendEvent(name + " joined the chaos.");
@@ -197,11 +199,12 @@ export class GameRoom {
   safeSend(ws,data){try{ws.send(JSON.stringify(data));}catch{}}
   sendEvent(text){for(const ws of this.sockets.values())this.safeSend(ws,{type:"event",text});}
   removeSocket(ws){
-    const id=ws.__classWarsPlayerId;
+    const id=this.socketIds.get(ws);
+    this.socketIds.delete(ws);
     if(!id)return;
     const p=this.players.get(id);
     if(p)this.sendEvent(p.name+" left the room.");
-    this.players.delete(id);this.sockets.delete(id);this.sendState();
+    this.players.delete(id);this.sockets.delete(id);if(this.players.size===0&&this.roundTimer){clearInterval(this.roundTimer);this.roundTimer=null;}this.sendState();
   }
 
   sendState() {
@@ -223,6 +226,6 @@ export class GameRoom {
     }));
     const state={type:"state",players,tiles:this.tiles,powerups:this.powerups,controlOwner:this.controlOwner,
       roundStarted:this.roundStarted,roundEnded:this.roundEnded};
-    for(const ws of this.sockets.values())this.safeSend(ws,{...state,you:ws.__classWarsPlayerId});
+    for(const [id,ws] of this.sockets.entries())this.safeSend(ws,{...state,you:id});
   }
 }
