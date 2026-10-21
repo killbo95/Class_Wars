@@ -45,6 +45,7 @@ export class GameRoom {
     this.roundStarted = Date.now();
     this.roundEnded = false;
     this.controlOwner = -1;
+    this.nextTeam = 0;
     this.lastEvent = Date.now();
     this.lastPowerup = Date.now();
   }
@@ -79,7 +80,7 @@ export class GameRoom {
       const name = String(data.name || "Player").replace(/[<>]/g, "").trim().slice(0,16) || "Player";
       const p = {
         id, name, classKey, x:random(60,W-60), y:random(60,H-60),
-        team:this.players.size % COLORS.length, score:0, speed:CLASSES[classKey].speed,
+        team:this.nextTeam++, score:0, speed:CLASSES[classKey].speed,
         lastMove:Date.now(), lastBonk:0, lastAbility:0, lastControl:0,
         shieldUntil:0, dx:1, dy:0
       };
