@@ -201,7 +201,7 @@ export class GameRoom {
   removeSocket(ws){
     const id=this.socketIds.get(ws);
     this.socketIds.delete(ws);
-    if(!id)return;
+    if(!id){if(this.players.size===0&&this.roundTimer){clearInterval(this.roundTimer);this.roundTimer=null;}return;}
     const p=this.players.get(id);
     if(p)this.sendEvent(p.name+" left the room.");
     this.players.delete(id);this.sockets.delete(id);if(this.players.size===0&&this.roundTimer){clearInterval(this.roundTimer);this.roundTimer=null;}this.sendState();
