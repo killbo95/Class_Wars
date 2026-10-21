@@ -1,19 +1,31 @@
-# CLASS WARS prototype
+# CLASS WARS
 
-A mobile-friendly browser game prototype that mixes territory capture, bonks, power-ups, random events, and shared rooms.
+A top-down browser arena game about capturing territory, controlling the center, using class abilities, collecting power-ups, and competing for the highest score.
+
+## Gameplay
+- **Runner** — faster movement; use **Q** to dash.
+- **Guardian** — slower movement; use **Q** for a short shield.
+- **Engineer** — balanced movement; use **Q** for a score overcharge.
+- **Trickster** — balanced movement; use **Q** to blink.
+- Move with **WASD** or the **arrow keys**. You can also tap the map to move.
+- Press **Space** or the **BONK** button near a rival.
+- Capture tiles, contest the central control point, and collect glowing power-ups.
+- Matches last **3 minutes**. Highest score wins.
+- The solo demo uses local simulated rivals. Multiplayer rooms share state through the Cloudflare Worker.
 
 ## Files
-- `index.html`: browser game and solo demo.
-- `worker.js`: Cloudflare Worker + Durable Object WebSocket room server.
-- `wrangler.toml`: Durable Object binding and migration.
+- `index.html` — game UI, rendering, controls, and local solo demo.
+- `worker.js` — room server and multiplayer game rules.
+- `wrangler.toml` — Cloudflare Worker and Durable Object configuration.
 
-## Try the browser prototype
-Open the GitHub Pages URL for this folder and click **Try solo demo**. That mode uses local simulated rivals and is not shared with other devices.
+## Test locally first
+Open `index.html` in a modern browser and click **Try solo demo**. This only runs on that device and does not need a server.
 
-## Enable shared rooms
-1. Create a Cloudflare Worker project and upload `worker.js` plus `wrangler.toml` (or deploy from this folder with Wrangler).
-2. Deploy the Worker. The Worker needs the Durable Object binding and migration in `wrangler.toml`.
-3. In the game, enter the Worker WebSocket base URL in **Multiplayer server**, e.g. `wss://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev`.
-4. Click **Create room**, then share the room code with classmates. They open the same game page, enter the same Worker URL and code, and click **Join room**.
+## Multiplayer deployment (not done yet)
+1. Install Wrangler and authenticate with Cloudflare.
+2. From this repository directory, run `npx wrangler deploy`.
+3. Check the deployed Worker’s `/health` URL returns JSON with `ok: true`.
+4. In Class Wars, set **Multiplayer server** to the Worker’s WebSocket base URL, for example `wss://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev`.
+5. Create a room and share the room code. Other players enter the same Worker URL and room code.
 
-The server currently caps each room at 150 players. It is a prototype, not a production-hardened service. Test with a small group first; before a large class launch, add moderation/reporting, persistent room state, reconnection, rate limiting, and load testing. A shared room is online only when the Worker is deployed and configured.
+The Worker needs the Durable Object binding and migration in `wrangler.toml`. Multiplayer has not been deployed or load-tested. The configured room limit is a code-level cap, **not a verified capacity guarantee**. Before a class-wide launch, test with a small group and add reconnection, moderation/reporting, persistence, and load testing.
